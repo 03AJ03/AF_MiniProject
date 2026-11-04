@@ -1,0 +1,278 @@
+{
+  "has_xgboost": true,
+  "last_reliable_year": 2011,
+  "disaster": {
+    "table": [
+      {
+        "model": "Logistic Regression",
+        "accuracy": 0.6797385620915033,
+        "precision": 0.525,
+        "recall": 0.21,
+        "f1": 0.3,
+        "roc_auc": 0.6415533980582524
+      },
+      {
+        "model": "Random Forest",
+        "accuracy": 0.6699346405228758,
+        "precision": 0.4931506849315068,
+        "recall": 0.36,
+        "f1": 0.4161849710982659,
+        "roc_auc": 0.6443203883495146
+      },
+      {
+        "model": "XGBoost",
+        "accuracy": 0.6535947712418301,
+        "precision": 0.4583333333333333,
+        "recall": 0.33,
+        "f1": 0.38372093023255816,
+        "roc_auc": 0.5748543689320388
+      },
+      {
+        "model": "Reference: historical rate only",
+        "accuracy": 0.6666666666666666,
+        "precision": 0.49193548387096775,
+        "recall": 0.61,
+        "f1": 0.5446428571428571,
+        "roc_auc": 0.6763592233009709
+      }
+    ],
+    "info": {
+      "n_events": 362,
+      "events_per_year": {
+        "1999": 36,
+        "2000": 28,
+        "2001": 21,
+        "2002": 33,
+        "2003": 38,
+        "2004": 38,
+        "2005": 15,
+        "2006": 23,
+        "2007": 28,
+        "2008": 27,
+        "2009": 14,
+        "2010": 14,
+        "2011": 27,
+        "2012": 10,
+        "2013": 5,
+        "2014": 1,
+        "2015": 2,
+        "2017": 2
+      },
+      "panel_rows": 561,
+      "positive_rate": 0.3582887700534759,
+      "test_years": [
+        2006,
+        2011
+      ],
+      "predicts_year": 2012,
+      "selected_model": "Random Forest",
+      "category_cutoffs": [
+        0.23614839689591033,
+        0.36913623495882286
+      ],
+      "features": [
+        "n_events_1y",
+        "n_events_3y",
+        "n_events_5y",
+        "n_events_all",
+        "years_since_last",
+        "hist_rate",
+        "years_with_event_5y",
+        "avg_areas_5y",
+        "avg_duration_5y",
+        "n_severe_storm_5y",
+        "n_hurricane_5y",
+        "n_fire_5y",
+        "n_flood_5y",
+        "n_severe_ice_storm_5y",
+        "n_tornado_5y"
+      ]
+    },
+    "importances": {
+      "hist_rate": 0.1604001066390203,
+      "avg_areas_5y": 0.13783716926628703,
+      "avg_duration_5y": 0.1266285329602194,
+      "n_events_all": 0.10174139674666798,
+      "n_events_3y": 0.10097068043771976,
+      "n_events_5y": 0.08998330056474843,
+      "n_severe_storm_5y": 0.07487102637466363,
+      "years_since_last": 0.059234410309882385,
+      "n_events_1y": 0.04989440267503766,
+      "years_with_event_5y": 0.03503243337452278,
+      "n_hurricane_5y": 0.019868495591609924,
+      "n_fire_5y": 0.015174955031500332,
+      "n_tornado_5y": 0.01315476889985847,
+      "n_flood_5y": 0.007715085735617393,
+      "n_severe_ice_storm_5y": 0.00749323539264455
+    }
+  },
+  "insurance": {
+    "summary": [
+      {
+        "family": "Linear Regression",
+        "spec": "A",
+        "label": "A: Baseline (region)",
+        "mae": 4205.995425926301,
+        "rmse": 6075.712590837841,
+        "r2": 0.742226665914052,
+        "mae_std": 271.79417906904627,
+        "rmse_std": 401.80356931943646,
+        "r2_std": 0.0511702956833925
+      },
+      {
+        "family": "Linear Regression",
+        "spec": "B",
+        "label": "B: Disaster-aware (region + risk)",
+        "mae": 4205.995425926302,
+        "rmse": 6075.712590837842,
+        "r2": 0.7422266659140518,
+        "mae_std": 271.7941790690451,
+        "rmse_std": 401.80356931943635,
+        "r2_std": 0.051170295683392576
+      },
+      {
+        "family": "Linear Regression",
+        "spec": "C",
+        "label": "C: Risk instead of region",
+        "mae": 4209.429896242678,
+        "rmse": 6078.366066364863,
+        "r2": 0.7420723591690904,
+        "mae_std": 265.69750543202133,
+        "rmse_std": 397.70023897352945,
+        "r2_std": 0.0507175936120392
+      },
+      {
+        "family": "Random Forest",
+        "spec": "A",
+        "label": "A: Baseline (region)",
+        "mae": 2547.1291251733487,
+        "rmse": 4619.714616099499,
+        "r2": 0.8495593721174067,
+        "mae_std": 243.1454271148643,
+        "rmse_std": 507.8781096999368,
+        "r2_std": 0.0395650305185619
+      },
+      {
+        "family": "Random Forest",
+        "spec": "B",
+        "label": "B: Disaster-aware (region + risk)",
+        "mae": 2547.6694811440134,
+        "rmse": 4619.6123881163485,
+        "r2": 0.8495413290639438,
+        "mae_std": 242.12885102770974,
+        "rmse_std": 506.96701374688365,
+        "r2_std": 0.039652216731014094
+      },
+      {
+        "family": "Random Forest",
+        "spec": "C",
+        "label": "C: Risk instead of region",
+        "mae": 2565.215218453408,
+        "rmse": 4633.821748504062,
+        "r2": 0.8486396660946688,
+        "mae_std": 239.14143951199046,
+        "rmse_std": 500.18135331414277,
+        "r2_std": 0.039784818438784376
+      },
+      {
+        "family": "XGBoost",
+        "spec": "A",
+        "label": "A: Baseline (region)",
+        "mae": 2483.742819635997,
+        "rmse": 4481.6358651654,
+        "r2": 0.8579364172518211,
+        "mae_std": 221.83646130962353,
+        "rmse_std": 528.4140484766664,
+        "r2_std": 0.039745493605910225
+      },
+      {
+        "family": "XGBoost",
+        "spec": "B",
+        "label": "B: Disaster-aware (region + risk)",
+        "mae": 2482.018171461069,
+        "rmse": 4476.816149265027,
+        "r2": 0.8581980743944669,
+        "mae_std": 222.08442717509283,
+        "rmse_std": 529.1036917853407,
+        "r2_std": 0.039815586951846275
+      },
+      {
+        "family": "XGBoost",
+        "spec": "C",
+        "label": "C: Risk instead of region",
+        "mae": 2476.841477973818,
+        "rmse": 4471.968766381207,
+        "r2": 0.8585067702785012,
+        "mae_std": 220.18798080860938,
+        "rmse_std": 528.9990409352014,
+        "r2_std": 0.03976876621602534
+      }
+    ],
+    "paired": [
+      {
+        "family": "Linear Regression",
+        "rmse_gain_B_vs_A": -3.0316490059097606e-13,
+        "se": 4.834370152085094e-13,
+        "folds_B_better": 5,
+        "n_folds": 15,
+        "verdict": "none"
+      },
+      {
+        "family": "Random Forest",
+        "rmse_gain_B_vs_A": 0.10222798315038138,
+        "se": 3.3157780426914094,
+        "folds_B_better": 8,
+        "n_folds": 15,
+        "verdict": "none"
+      },
+      {
+        "family": "XGBoost",
+        "rmse_gain_B_vs_A": 4.819715900372224,
+        "se": 2.787407900452225,
+        "folds_B_better": 9,
+        "n_folds": 15,
+        "verdict": "none"
+      }
+    ],
+    "best_family": "XGBoost",
+    "diagnostics": {
+      "risk_values_per_region": {
+        "northeast": 1,
+        "northwest": 1,
+        "southeast": 1,
+        "southwest": 1
+      },
+      "risk_is_function_of_region": true,
+      "n_distinct_risk_values": 4,
+      "regions": [
+        {
+          "region": "northeast",
+          "risk": 0.2877029935511228,
+          "mean_charges": 13406.384516385804,
+          "cost_relativity": 1.046660886373991
+        },
+        {
+          "region": "northwest",
+          "risk": 0.2621117853496693,
+          "mean_charges": 12417.575373969232,
+          "cost_relativity": 1.0219995651988114
+        },
+        {
+          "region": "southeast",
+          "risk": 0.4608938498884545,
+          "mean_charges": 14735.41143760989,
+          "cost_relativity": 0.9861755097332089
+        },
+        {
+          "region": "southwest",
+          "risk": 0.3009497346038874,
+          "mean_charges": 12346.937377292308,
+          "cost_relativity": 0.9582433934492908
+        }
+      ],
+      "spearman_risk_vs_relativity": -0.6000000000000001,
+      "note": "n = 4 regions: descriptive only, not statistically meaningful."
+    },
+    "n_rows": 1338
+  }
+}

@@ -1,0 +1,237 @@
+{% raw %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disaster-Aware Insurance Estimator</title>
+<style>
+:root{--navy:#0f3057;--teal:#178a8a;--bg:#f4f7fa;--card:#fff;--line:#dfe6ec;--text:#22303f;--mute:#5a6b7a;
+--low:#2e9e6b;--med:#e0a100;--high:#d1432f}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+header{background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;padding:18px 28px}
+header h1{margin:0;font-size:20px}header p{margin:4px 0 0;opacity:.85;font-size:13px}
+nav{display:flex;gap:6px;padding:12px 28px 0;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:5}
+nav button{border:0;background:none;padding:10px 16px;font-size:14px;font-weight:600;color:var(--mute);cursor:pointer;border-bottom:3px solid transparent}
+nav button.on{color:var(--navy);border-color:var(--teal)}
+main{max-width:1100px;margin:0 auto;padding:22px 20px 60px}
+.panel{display:none}.panel.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+.card h2{margin:0 0 10px;font-size:15px;color:var(--navy)}
+.grid2{display:grid;grid-template-columns:330px 1fr;gap:16px;align-items:start}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+label{display:block;font-size:12px;font-weight:600;color:var(--mute);margin:10px 0 3px}
+select,input[type=number]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:14px;background:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fbfcfd}
+.stat small{display:block;font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.4px}
+.stat b{font-size:20px;color:var(--navy)}
+.badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;color:#fff;vertical-align:middle}
+.Low{background:var(--low)}.Medium{background:var(--med)}.High{background:var(--high)}
+.note{border-left:4px solid var(--med);background:#fff7e0;border-radius:6px;padding:10px 12px;font-size:13px;margin:10px 0}
+.note.info{border-color:#4c5fd5;background:#eef2ff}.note.bad{border-color:var(--high);background:#fdeceb}
+.err{color:var(--high);font-size:13px;min-height:18px;margin-top:8px}
+input[type=range]{width:100%;accent-color:var(--teal)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}
+th{background:var(--navy);color:#fff;text-align:left;padding:6px 9px;font-size:12px}
+td{padding:6px 9px;border-bottom:1px solid var(--line)}
+tr.best td{background:#e8f7f4;font-weight:600}tr.ref td{color:var(--mute);font-style:italic}
+.map{display:grid;grid-template-columns:repeat(11,1fr);gap:4px;max-width:720px;margin:8px auto}
+.tile{aspect-ratio:1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:transform .1s}
+.tile:hover{transform:scale(1.12);z-index:2}.tile small{font-size:9px;font-weight:500}
+.tile.sel{border-color:var(--navy);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--navy)}
+.legend{display:flex;align-items:center;gap:8px;justify-content:center;font-size:12px;color:var(--mute)}
+.legend i{width:140px;height:10px;border-radius:5px;background:linear-gradient(90deg,#dff3ef,#d35400)}
+.rcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.bar{height:8px;background:#e7edf2;border-radius:4px;overflow:hidden}.bar>div{height:100%;background:var(--teal)}
+.fi{display:grid;grid-template-columns:150px 1fr 44px;gap:8px;align-items:center;font-size:12px;margin:3px 0}
+svg text{font-size:11px;fill:#5a6b7a}
+</style>
+</head>
+<body>
+<header>
+  <h1>Disaster-Aware Insurance Estimator</h1>
+  <p>Research proof-of-concept &mdash; health-insurance cost data + predicted state disaster risk. Not a real premium calculator.</p>
+</header>
+<nav>
+  <button class="on" data-tab="est">Estimator</button>
+  <button data-tab="map">Risk Map</button>
+  <button data-tab="lab">Model Lab</button>
+</nav>
+<main>
+
+<!-- ============ ESTIMATOR ============ -->
+<section id="est" class="panel on">
+ <div class="grid2">
+  <div class="card">
+   <h2>Your details</h2>
+   <label>State</label><select id="state"></select>
+   <div class="row"><div><label>Age</label><input id="age" type="number" value="35" min="18" max="100"></div>
+   <div><label>BMI</label><input id="bmi" type="number" value="27" step="0.1" min="10" max="60"></div></div>
+   <div class="row"><div><label>Children</label><input id="children" type="number" value="2" min="0" max="10"></div>
+   <div><label>Sex</label><select id="sex"><option value="female">Female</option><option value="male">Male</option></select></div></div>
+   <label>Smoker</label><select id="smoker"><option value="no">No</option><option value="yes">Yes</option></select>
+   <div class="err" id="err"></div>
+  </div>
+  <div>
+   <div class="card">
+    <h2 id="title">Estimate</h2>
+    <div class="stats">
+      <div class="stat"><small>Region</small><b id="region">-</b></div>
+      <div class="stat"><small>State disaster risk (<span class="yr"></span>)</small><b id="srisk">-</b> <span id="scat" class="badge"></span></div>
+      <div class="stat"><small>Region disaster risk</small><b id="rrisk">-</b> <span id="rcat" class="badge"></span></div>
+    </div>
+    <div class="stats" style="margin-top:10px">
+      <div class="stat"><small>Baseline estimate (Model A)</small><b id="base">-</b></div>
+      <div class="stat"><small>Disaster-aware (Model B)</small><b id="aware">-</b></div>
+      <div class="stat"><small>Difference</small><b id="diff">-</b></div>
+    </div>
+    <div class="note" id="why"></div>
+    <div id="warn"></div>
+   </div>
+   <div class="card">
+    <h2>What-if: how does the model respond to disaster risk?</h2>
+    <div style="font-size:13px;color:var(--mute)">Drag the slider to change the risk. This uses Model C (risk replaces region), so risk is the only location signal the model has.</div>
+    <input type="range" id="risk" min="0" max="1" step="0.01" value="0.3">
+    <div id="wi-text" style="font-weight:600;color:var(--navy)"></div>
+    <div id="chart"></div>
+    <div class="note info">Training data contained only 4 risk levels (the dots). The line between them is the model's extrapolation &mdash; flat or stepped means it found little extra signal.</div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- ============ RISK MAP ============ -->
+<section id="map" class="panel">
+ <div class="card">
+  <h2>Predicted chance of at least one FEMA major-disaster declaration in <span class="yr"></span></h2>
+  <div class="map" id="tiles"></div>
+  <div class="legend">lower <i></i> higher &nbsp;&middot;&nbsp; click a state to estimate for it</div>
+ </div>
+ <div class="card"><h2>Regional risk (average of member states)</h2><div class="rcards" id="rcards"></div></div>
+</section>
+
+<!-- ============ MODEL LAB ============ -->
+<section id="lab" class="panel"><div id="labbody">Loading&hellip;</div></section>
+
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=n=>'$'+Math.round(n).toLocaleString('en-US');
+const pct=p=>Math.round(p*100)+'%';
+const f3=n=>Number(n).toFixed(3);
+let META,RES,WI=null,timer;
+
+/* tile-grid layout: [code,row,col] */
+const LAYOUT=[["AK",0,0],["ME",0,10],["WI",1,5],["VT",1,9],["NH",1,10],
+["WA",2,0],["ID",2,1],["MT",2,2],["ND",2,3],["MN",2,4],["IL",2,5],["MI",2,6],["NY",2,8],["MA",2,9],
+["OR",3,0],["NV",3,1],["WY",3,2],["SD",3,3],["IA",3,4],["IN",3,5],["OH",3,6],["PA",3,7],["NJ",3,8],["CT",3,9],["RI",3,10],
+["CA",4,0],["UT",4,1],["CO",4,2],["NE",4,3],["MO",4,4],["KY",4,5],["WV",4,6],["VA",4,7],["MD",4,8],["DE",4,9],
+["AZ",5,1],["NM",5,2],["KS",5,3],["AR",5,4],["TN",5,5],["NC",5,6],["SC",5,7],["DC",5,8],
+["OK",6,3],["LA",6,4],["MS",6,5],["AL",6,6],["GA",6,7],["HI",7,0],["TX",7,3],["FL",7,7]];
+
+async function post(url,body){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json(); if(!r.ok) throw new Error(j.error||'Request failed'); return j;
+}
+const getProfile=()=>({state:$('#state').value,age:$('#age').value,bmi:$('#bmi').value,
+  children:$('#children').value,sex:$('#sex').value,smoker:$('#smoker').value});
+
+async function update(){
+  try{
+    const p=getProfile();
+    const [e,w]=await Promise.all([post('/api/estimate',p),post('/api/whatif',p)]);
+    $('#err').textContent='';
+    $('#title').textContent='Estimate for '+e.state_name;
+    $('#region').textContent=e.region.charAt(0).toUpperCase()+e.region.slice(1);
+    $('#srisk').textContent=pct(e.state_risk);$('#rrisk').textContent=pct(e.region_risk);
+    for(const [id,c] of [['scat',e.state_category],['rcat',e.region_category]]){const b=$('#'+id);b.textContent=c;b.className='badge '+c;}
+    $('#base').textContent=fmt(e.baseline);$('#aware').textContent=fmt(e.disaster_aware);
+    $('#diff').textContent=(e.difference>=0?'+':'-')+fmt(Math.abs(e.difference));
+    const why=$('#why');why.textContent=e.explanation;why.className='note'+(e.evidence==='gain'?' info':'');
+    $('#warn').innerHTML=e.warnings.map(w=>'<div class="note bad">'+w+'</div>').join('');
+    WI=w;$('#risk').value=e.region_risk;drawWhatIf(e.region_risk);
+  }catch(err){$('#err').textContent=err.message;}
+}
+const schedule=()=>{clearTimeout(timer);timer=setTimeout(update,250);};
+
+function drawWhatIf(r){
+  const g=WI;if(!g)return;
+  const W=600,H=230,L=60,R=16,T=14,B=34;
+  const all=g.cost.concat(g.support.map(s=>s.cost));
+  let lo=Math.min(...all),hi=Math.max(...all);const pad=Math.max((hi-lo)*0.3,300);lo-=pad;hi+=pad;
+  const X=v=>L+v*(W-L-R),Y=c=>T+(1-(c-lo)/(hi-lo))*(H-T-B);
+  const idx=Math.max(0,Math.min(100,Math.round(r*100))),cur=g.cost[idx];
+  const path=g.grid.map((v,i)=>(i?'L':'M')+X(v).toFixed(1)+','+Y(g.cost[i]).toFixed(1)).join('');
+  let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%">';
+  for(let i=0;i<=4;i++){const v=i/4;s+='<line x1="'+X(v)+'" x2="'+X(v)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="#eef2f5"/><text x="'+X(v)+'" y="'+(H-14)+'" text-anchor="middle">'+pct(v)+'</text>';}
+  for(let i=0;i<=3;i++){const c=lo+(hi-lo)*i/3;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(c)+'" y2="'+Y(c)+'" stroke="#eef2f5"/><text x="'+(L-6)+'" y="'+(Y(c)+4)+'" text-anchor="end">'+fmt(c)+'</text>';}
+  s+='<path d="'+path+'" fill="none" stroke="#178a8a" stroke-width="2.5"/>';
+  g.support.slice().sort((a,b)=>a.risk-b.risk).forEach((p,i)=>{
+    s+='<circle cx="'+X(p.risk)+'" cy="'+Y(p.cost)+'" r="5" fill="#0f3057"/><text x="'+X(p.risk)+'" y="'+(Y(p.cost)+(i%2?18:-10))+'" text-anchor="middle" font-weight="700">'+p.region.slice(0,2).toUpperCase()+'</text>';});
+  s+='<line x1="'+X(r)+'" x2="'+X(r)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="#d1432f" stroke-dasharray="4 3"/><circle cx="'+X(r)+'" cy="'+Y(cur)+'" r="6" fill="#d1432f"/>';
+  s+='<text x="'+(W/2)+'" y="'+(H-1)+'" text-anchor="middle">Disaster risk</text></svg>';
+  $('#chart').innerHTML=s;
+  $('#wi-text').textContent='Risk '+pct(r)+'  \u2192  model C estimate '+fmt(cur);
+}
+
+function buildMap(){
+  const rs=META.states.map(s=>s.risk),lo=Math.min(...rs),hi=Math.max(...rs);
+  const by=Object.fromEntries(META.states.map(s=>[s.code,s]));
+  const mix=t=>{const a=[223,243,239],b=[211,84,0];return 'rgb('+a.map((x,i)=>Math.round(x+(b[i]-x)*t)).join(',')+')';};
+  $('#tiles').innerHTML=LAYOUT.map(([c,r,col])=>{const s=by[c],t=(s.risk-lo)/(hi-lo||1);
+    return '<div class="tile" data-s="'+c+'" style="grid-row:'+(r+1)+';grid-column:'+(col+1)+';background:'+mix(t)+';color:'+(t>.55?'#fff':'#0f3057')+'" title="'+s.name+' ('+s.region+'): '+pct(s.risk)+' \u2013 '+s.category+'">'+c+'<small>'+pct(s.risk)+'</small></div>';}).join('');
+  $('#tiles').onclick=e=>{const t=e.target.closest('.tile');if(!t)return;$('#state').value=t.dataset.s;showTab('est');update();};
+  $('#rcards').innerHTML=META.regions.sort((a,b)=>b.risk-a.risk).map(r=>
+    '<div class="stat"><small>'+r.region+'</small><b>'+pct(r.risk)+'</b> <span class="badge '+r.category+'">'+r.category+'</span><div class="bar" style="margin-top:6px"><div style="width:'+r.risk*100+'%"></div></div></div>').join('');
+}
+function markTile(){document.querySelectorAll('.tile').forEach(t=>t.classList.toggle('sel',t.dataset.s===$('#state').value));}
+
+function buildLab(){
+  const d=RES.disaster,i=RES.insurance,inf=d.info,dg=i.diagnostics;
+  const rows=d.table.map(r=>'<tr class="'+(r.model===inf.selected_model?'best':r.model.startsWith('Reference')?'ref':'')+'"><td>'+r.model+'</td>'+
+    ['accuracy','precision','recall','f1','roc_auc'].map(k=>'<td>'+f3(r[k])+'</td>').join('')+'</tr>').join('');
+  const fi=Object.entries(d.importances).slice(0,8),mx=fi[0][1]||1;
+  const ins=i.summary.map(r=>'<tr><td>'+r.family+'</td><td>'+r.label+'</td><td>'+fmt(r.mae)+'</td><td>'+fmt(r.rmse)+'</td><td>'+f3(r.r2)+'</td></tr>').join('');
+  const pr=i.paired.map(p=>'<tr><td>'+p.family+'</td><td>'+(p.rmse_gain_B_vs_A>=0?'+':'')+p.rmse_gain_B_vs_A.toFixed(1)+'</td><td>\u00b1'+p.se.toFixed(1)+'</td><td>'+p.folds_B_better+' / '+p.n_folds+'</td><td>'+({gain:'B better',worse:'B worse',none:'no difference'})[p.verdict]+'</td></tr>').join('');
+  const rg=dg.regions.map(r=>'<tr><td>'+r.region+'</td><td>'+pct(r.risk)+'</td><td>'+fmt(r.mean_charges)+'</td><td>'+r.cost_relativity.toFixed(3)+'</td></tr>').join('');
+  $('#labbody').innerHTML=
+   (RES.has_xgboost?'':'<div class="note">xgboost is not installed here, so "XGBoost" rows use scikit-learn HistGradientBoosting as a stand-in. Run <code>pip install xgboost</code> and <code>python train.py</code> again.</div>')+
+   '<div class="card"><h2>Model 1 &ndash; Disaster prediction (walk-forward, test years '+inf.test_years[0]+'&ndash;'+inf.test_years[1]+')</h2>'+
+   '<div style="font-size:13px;color:var(--mute)">'+inf.n_events+' state-level events &middot; '+inf.panel_rows+' state-year rows &middot; '+pct(inf.positive_rate)+' of state-years had a disaster the following year. Selected: <b>'+inf.selected_model+'</b>.</div>'+
+   '<table><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th></tr>'+rows+'</table>'+
+   '<div class="note">If a learned model does not clearly beat the "historical rate only" row, the extra features are not adding much &mdash; report that honestly rather than picking a winner by decimals. The data is small (about 560 rows).</div>'+
+   '<h2 style="margin-top:14px">What the selected model relies on</h2>'+fi.map(([k,v])=>'<div class="fi"><span>'+k+'</span><div class="bar"><div style="width:'+(v/mx*100)+'%"></div></div><span>'+pct(v)+'</span></div>').join('')+'</div>'+
+   '<div class="card"><h2>Model 2 &ndash; Insurance cost ('+i.n_rows+' rows, 5-fold CV &times; 3)</h2>'+
+   '<table><tr><th>Family</th><th>Feature set</th><th>MAE</th><th>RMSE</th><th>R&sup2;</th></tr>'+ins+'</table>'+
+   '<h2 style="margin-top:14px">Does disaster risk help? (Model B vs A, same folds)</h2>'+
+   '<table><tr><th>Family</th><th>RMSE gain ($)</th><th>Std. error</th><th>Folds B better</th><th>Verdict</th></tr>'+pr+'</table></div>'+
+   '<div class="card"><h2>Why B cannot beat A on this dataset</h2>'+
+   (dg.risk_is_function_of_region?'<div class="note bad"><b>Disaster risk takes only '+dg.n_distinct_risk_values+' distinct values &mdash; exactly one per region.</b> Model B therefore contains the same information as Model A, so any difference is noise. To test the research question you need insurance records with a finer location (state, ZIP or county).</div>':'')+
+   '<table><tr><th>Region</th><th>Predicted risk</th><th>Mean charges</th><th>Cost relativity*</th></tr>'+rg+'</table>'+
+   '<div style="font-size:12px;color:var(--mute)">*actual &divide; predicted from demographics alone (&gt;1 = costlier than age/BMI/smoker explain). '+dg.note+'</div></div>';
+}
+
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id===t));
+  markTile();
+}
+
+(async function init(){
+  META=await (await fetch('/api/meta')).json();
+  RES=await (await fetch('/api/results')).json();
+  document.querySelectorAll('.yr').forEach(e=>e.textContent=META.year);
+  $('#state').innerHTML=META.states.map(s=>'<option value="'+s.code+'">'+s.name+'</option>').join('');
+  $('#state').value='FL';
+  buildMap();buildLab();
+  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+  ['state','age','bmi','children','sex','smoker'].forEach(id=>{$('#'+id).addEventListener('input',()=>{schedule();markTile();});});
+  $('#risk').addEventListener('input',e=>drawWhatIf(parseFloat(e.target.value)));
+  markTile();update();
+})();
+</script>
+</body>
+</html>{% endraw %}

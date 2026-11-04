@@ -1,0 +1,194 @@
+RESULTS EXPLAINED — Disaster-Aware Insurance Risk Pipeline
+==========================================================
+
+Purpose
+-------
+This document explains the model results for an AI assistant, project report,
+or presentation. Use the actual measured results below. Do not claim that every
+metric improved or describe correlations as causal effects.
+
+There are two different prediction tasks:
+1. Disaster model: binary classification — predicts whether a state has at
+   least one FEMA major-disaster declaration the following year.
+2. Insurance model: regression — predicts the medical insurance "charges"
+   value in the insurance.csv dataset. This is not a classification task.
+
+
+What changed in the model tuning
+-------------------------------
+The insurance XGBoost regressor was changed to a shallower, more regularized
+configuration:
+- 400 trees
+- max_depth=2
+- learning_rate=0.03
+- min_child_weight=5
+- reg_lambda=5
+- subsample=0.9
+- colsample_bytree=0.9
+
+The comparison used the same deterministic RepeatedKFold splits (5 folds x 3
+repeats, 15 fold results) before and after tuning. These are cross-validation
+averages, not scores on a separate untouched final test set.
+
+Insurance baseline feature set A:
+
+Metric                 Before tuning    After tuning    Direction
+MAE                    $2,542.63        $2,483.74       Improved (lower)
+RMSE                   $4,591.65        $4,481.64       Improved (lower)
+R-squared (R2)          0.8527           0.8579          Improved (higher)
+
+The model's recorded standard deviations across folds after tuning were
+approximately $221.84 MAE, $528.41 RMSE, and 0.04 R2. Scores vary between
+folds; do not imply that small differences are guaranteed on new data.
+
+Meaning of regression metrics:
+- MAE is the average absolute prediction error in the target's units (dollars).
+- RMSE is also in dollars and penalizes large errors more strongly than MAE.
+- R2 summarizes explained variation relative to predicting the mean; 1 is
+  perfect, 0 is equivalent to the mean baseline, and it can be negative.
+- "Accuracy" is not reported for this regression task. Do not call R2
+  accuracy. A separate accuracy-within-a-dollar-tolerance metric would need to
+  be defined and evaluated explicitly.
+
+The final training run recorded the following insurance XGBoost averages:
+
+Feature set            MAE         RMSE        R2
+A: baseline            $2,483.74   $4,481.64   0.8579
+B: region + risk       $2,482.02   $4,476.82   0.8578
+C: risk instead region $2,476.84   $4,471.97   0.8586
+
+The pipeline selects the family by the RMSE of feature set A. XGBoost was
+selected. Feature sets B and C have slightly different scores, but their
+small differences should not be presented as proof that disaster risk caused
+or reliably improves insurance charges.
+
+
+Disaster classification results
+-------------------------------
+The disaster model's reported results did NOT change as part of the insurance
+regressor tuning. At the default probability threshold of 0.50, the
+walk-forward validation results were:
+
+Model                              Accuracy  Precision  Recall  F1     ROC-AUC
+Logistic Regression                0.680     0.525      0.210  0.300  0.642
+Random Forest (selected)            0.670     0.493      0.360  0.416  0.644
+XGBoost                             0.654     0.458      0.330  0.384  0.575
+Historical-rate reference           0.667     0.492      0.610  0.545  0.676
+
+The model selection code chooses among learned models by rounded ROC-AUC.
+If rounded scores tie, the first model in candidate order is selected. It
+does not choose the model by accuracy. Random Forest is the selected final
+disaster model in the recorded run.
+
+Metric meanings for classification:
+- Accuracy: fraction of all state-years classified correctly at the chosen
+  threshold.
+- Precision: among predicted disaster years, the fraction that were disaster
+  years.
+- Recall: among actual disaster years, the fraction the model detected.
+- F1: harmonic mean of precision and recall.
+- ROC-AUC: ranking/discrimination across thresholds; 0.5 is chance-level.
+
+There is a precision/recall/accuracy trade-off when changing the classification
+threshold. For the selected Random Forest at threshold 0.30, accuracy is
+approximately 0.578, precision 0.414, recall 0.700, and F1 0.520. Compared
+with its threshold-0.50 results, recall and F1 rise, but accuracy and precision
+fall. Thus a threshold adjustment does not improve every metric. The saved
+reported results use threshold 0.50.
+
+The historical-rate reference has better recall, F1, and ROC-AUC than the
+selected Random Forest, while the learned models have different trade-offs.
+Report this honestly: the learned model does not clearly beat the reference on
+all measures.
+
+
+Why is disaster-model accuracy only about 67%?
+------------------------------------------------
+The score is modest because this is a difficult forecasting problem with
+limited data and limited predictive information, not because the insurance
+regression model has the same accuracy problem.
+
+Evidence from this exact evaluation:
+- The walk-forward test set contains 306 state-year examples from 2006-2011:
+  100 positive (a disaster occurred the following year) and 206 negative.
+- Predicting "no disaster" for every test example would have accuracy
+  206 / 306 = 67.3%. This is a simple majority-class baseline, not a useful
+  disaster warning system.
+- The Random Forest at threshold 0.50 scores 67.0%, essentially the same
+  accuracy as that all-negative baseline. It does detect some disaster years
+  (recall 0.36), unlike an all-negative classifier (recall 0).
+- Across individual test years, the positive rate ranges from 21.6% (2009) to
+  43.1% (2007). Year-to-year variation makes a single fixed threshold and
+  historical-pattern model less reliable.
+
+Reasons the task is hard:
+1. Few examples: the complete panel has 561 rows, but walk-forward testing
+   uses only 306 rows. Each row represents one state and one target year.
+2. Noisy event outcomes: whether a major disaster declaration occurs in a
+   particular state in a particular year is affected by many factors that may
+   not be predictable from prior declaration counts.
+3. Limited features: the model mostly sees past disaster counts, event
+   categories, and event duration/area summaries. It does not have direct
+   weather forecasts, climate/exposure measurements, population, or other
+   potentially relevant predictors.
+4. Strict time-aware evaluation: each test year is predicted using only
+   earlier years. This better resembles forecasting the future, but is harder
+   than randomly mixing years into training and testing.
+5. Small number of test years: six annual test periods provide limited
+   evidence about long-term performance.
+6. Imbalanced labels: on the test set, about 67.3% of rows are negative.
+   Accuracy can therefore look acceptable even for a classifier that misses
+   every disaster. Always report recall, F1, and ROC-AUC alongside accuracy.
+7. Threshold choice: metrics such as accuracy, precision, recall, and F1 are
+   calculated from probabilities using a threshold of 0.50. Lowering it can
+   catch more disasters, but the measured example shows that this reduces
+   accuracy.
+
+Interpretation: 67% should not be presented as strong predictive accuracy.
+It is almost identical to the 67.3% majority-class baseline on the same test
+rows. The Random Forest does identify some disaster cases, but its ranking is
+modest; the historical-rate reference actually has higher ROC-AUC (0.676
+versus 0.644) and recall (0.61 versus 0.36).
+More complete event data and meaningful external predictors would be needed
+before expecting dependable improvement. Do not promise that adding features
+will improve accuracy until they are tested with the same time-aware
+validation.
+
+
+Validation and data limitations
+-------------------------------
+- Disaster validation is chronological walk-forward validation, testing
+  target years 2006 through 2011. It is not a random train/test split.
+- The disaster panel has 561 state-year rows and a 35.8% positive rate; the
+  event file yields 362 state-level events in the configured date window.
+- Event counts in the provided FEMA extract become very sparse after 2012.
+  The project therefore treats 2011 as the last reliable year. The displayed
+  risk prediction is for 2012, not a current forecast.
+- The insurance dataset has 1,338 rows and four broad regions. The
+  disaster_risk value is a single fixed value per region, so it contains no
+  finer location information than region itself. To test whether disaster
+  exposure independently relates to insurance costs, use records with
+  state/county/ZIP-level locations and appropriate validation.
+- Cross-validation results are estimates from this dataset, not guarantees of
+  performance on new populations. The insurance data is commonly used as a
+  sample health-insurance charges dataset; predictions should not be described
+  as real insurance premiums or financial advice.
+
+
+Guidance for an AI assistant using these results
+------------------------------------------------
+When writing a report or answering questions:
+1. Separate the disaster classification metrics from the insurance regression
+   metrics.
+2. Say clearly that insurance MAE, RMSE, and R2 improved after tuning, but
+   disaster-model accuracy did not change.
+3. Do not say that "all metrics improved." The classification scores did not
+   improve in the tuning change, and lowering its threshold trades accuracy
+   for recall/F1.
+4. Do not call R2 "accuracy."
+5. Include the validation method and note the small/truncated disaster data.
+6. Do not claim disaster risk causes higher or lower insurance charges; risk
+   is only a four-value regional feature in this dataset.
+7. If quoting numbers, use the measured tables in this document and explain
+   whether a value is a cross-validation average or a threshold-specific
+   classification result.
